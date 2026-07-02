@@ -64,9 +64,12 @@ esac
 if [ -f "$CSV" ]; then
   echo ""
   echo "=== Summary ==="
-  # Count records and eventDate range with a proper CSV reader.
+  # Optional summary: record count and eventDate range via a proper CSV reader.
+  # Uses only the Python standard library. If python3 is absent, the extractor's own
+  # row count above is enough, so we just skip this.
   # (Do not use wc -l: a few fields contain embedded newlines and would inflate the count.)
-  .venv/bin/python - <<'PY'
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - <<'PY'
 import csv, datetime
 n = 0
 mn = mx = None
@@ -82,6 +85,9 @@ with open("concerts.csv") as f:
 print(f"concerts.csv records: {n:,}")
 print(f"eventDate range:      {mn} to {mx}")
 PY
+  else
+    echo "(python3 not found; skipping the record-count summary)"
+  fi
   echo ""
   echo "Done. If you need the shareable split files, run ./handover/split_concerts_csv.sh"
 else

@@ -1,24 +1,33 @@
-# Pollstar Data Cloud Pipeline
+# Pollstar Data Cloud Extractor
 
-Internal tooling to extract the Pollstar Data Cloud Boxoffice dataset and build a set of
-concert-market analyses on top of it.
+Tooling to extract the Pollstar Data Cloud Boxoffice dataset into a flat CSV.
+
+Pollstar has no export button and no public API. This repo calls the internal
+`boxoffice2` API that the website uses, decrypts the AES-encrypted response, and writes
+every engagement (EventDate on or after 2010-01-01) to `concerts.csv`.
 
 **Start here:** [`handover/README_HANDOVER.md`](handover/README_HANDOVER.md) is the full
-maintenance guide (token refresh, how to pull data, the analyses, data dictionary,
-troubleshooting, and a handover checklist).
+guide (token refresh, how to pull data, how the decryption works, the output schema,
+troubleshooting).
+
+## Quick start
+
+```bash
+# 1. Put a valid Pollstar bearer token in jwt.txt (see the guide, section 3).
+# 2. Pull the data:
+./handover/refresh_data.sh
+```
 
 ## Layout
 
-- `fetch_pollstar.js` - the extractor (Node). Pulls and decrypts the Boxoffice API into `concerts.csv`.
-- `handover/` - the maintenance guide plus helper scripts (`refresh_data.sh`, `run_analyses.sh`, `split_concerts_csv.sh`, `refresh_cpi.sh`) and `requirements.txt`.
-- `*.py` - analysis scripts that turn `concerts.csv` and the page cache into Excel workbooks.
+- `fetch_pollstar.js` - the extractor (Node, standard library only). Pulls and decrypts the API into `concerts.csv`.
+- `handover/` - the guide plus helper scripts: `refresh_data.sh` (pull data) and `split_concerts_csv.sh` (split the CSV for sharing).
 - `chunks/` - saved Pollstar site JavaScript, kept only as reference for the decryption logic.
-- `cpi_u_cpiaucsl.csv` - CPI-U deflator series from FRED.
 
 ## Not in this repo (by design)
 
-The token (`jwt.txt`), the licensed raw data (`concerts.csv` and its splits), the page
-cache (`pages/`), the Python virtual environment (`.venv/`), and the generated workbooks
-and charts are excluded via `.gitignore`. Regenerate them by following the handover guide.
+The token (`jwt.txt`), the extracted data (`concerts.csv` and its splits), and the page
+cache (`pages/`) are excluded via `.gitignore`. The downstream analysis scripts are
+maintained separately and are not part of this repo.
 
 Author: Nosher Ali Khan. Last updated: 2026-07-02.

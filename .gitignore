@@ -13,9 +13,21 @@ concerts.csv
 concerts_part*_of_*.csv
 pages/
 
-# Generated outputs (regenerate with run_analyses.sh).
+# Generated outputs.
 *.xlsx
 *.png
+
+# Analysis scripts and inputs: kept locally, NOT part of this extraction-only repo.
+build_excel.py
+build_excel_full.py
+premium_ip_persistence.py
+promoter_map.py
+quarterly_price_analysis.py
+ticket_price_analysis.py
+cpi_u_cpiaucsl.csv
+handover/run_analyses.sh
+handover/refresh_cpi.sh
+handover/requirements.txt
 
 # Saved site copies (not needed for the pipeline).
 Pollstar Data Cloud _ Boxoffice.html
