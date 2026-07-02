@@ -7,18 +7,19 @@
 # Last updated: 2026-07-02
 #
 # Usage (run from the project root):
-#   ./handover/refresh_data.sh          # fetch missing pages, then rebuild concerts.csv
-#   ./handover/refresh_data.sh --fresh  # delete the page cache first, then do a full pull
-#   ./handover/refresh_data.sh --csv    # rebuild concerts.csv from cache only, no network
+#   ./pollstar/scripts/refresh_data.sh          # fetch missing pages, then rebuild concerts.csv
+#   ./pollstar/scripts/refresh_data.sh --fresh  # delete the page cache first, then do a full pull
+#   ./pollstar/scripts/refresh_data.sh --csv    # rebuild concerts.csv from cache only, no network
 #
-# Requires a valid token in jwt.txt. See README_HANDOVER.md sections 3 and 4.
+# Requires a valid token in jwt.txt at the project root. See pollstar/README.md sections 3 and 4.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"   # scripts live in handover/, data lives one level up
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"   # scripts live in pollstar/scripts/, data at project root
 cd "$PROJECT_ROOT"
 
+EXTRACTOR="pollstar/fetch_pollstar.js"
 CSV="concerts.csv"
 
 echo "=== Pollstar data refresh ==="
@@ -44,14 +45,14 @@ case "${1:-}" in
   --fresh)
     echo "Removing page cache for a full fresh pull ..."
     rm -rf pages/
-    node fetch_pollstar.js
+    node "$EXTRACTOR"
     ;;
   --csv)
     echo "Rebuilding CSV from cached pages only ..."
-    node fetch_pollstar.js --csv
+    node "$EXTRACTOR" --csv
     ;;
   "")
-    node fetch_pollstar.js
+    node "$EXTRACTOR"
     ;;
   *)
     echo "Unknown option: $1" >&2
@@ -89,7 +90,7 @@ PY
     echo "(python3 not found; skipping the record-count summary)"
   fi
   echo ""
-  echo "Done. If you need the shareable split files, run ./handover/split_concerts_csv.sh"
+  echo "Done. If you need the shareable split files, run ./pollstar/scripts/split_concerts_csv.sh"
 else
   echo "ERROR: concerts.csv was not produced. Check the output above." >&2
   exit 1

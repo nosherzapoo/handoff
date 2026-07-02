@@ -5,11 +5,15 @@
  * Pulls every boxoffice report with EventDate >= 2010-01-01 from the (encrypted)
  * boxoffice2 API and writes a flat CSV.
  *
- * AUTH: put your bearer token in jwt.txt next to this file. Get it from the
+ * AUTH: put your bearer token in jwt.txt at the PROJECT ROOT (the folder that
+ * contains this pollstar/ directory), not next to this file. Get it from the
  * logged-in site: DevTools -> Network -> Fetch/XHR -> a `boxoffice2?...` request
  * -> Copy as cURL -> take the value of the `Authorization:` header.
  * The SAME token is also the AES key source (cookie PS_U_TOKEN == this JWT), so
  * jwt.txt is the only secret needed. Token lasts ~30 days; refresh when expired.
+ *
+ * Data location: jwt.txt, pages/, and concerts.csv all live at the project root
+ * (one level up from this file), so the code folder stays clean.
  *
  * Encryption (reverse-engineered from chunk 523 / module 56382):
  *   resp        = JSON.parse(body)                 // outer body is a JSON string
@@ -28,7 +32,7 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 
-const HERE = __dirname;
+const HERE = path.resolve(__dirname, "..");   // project root (one level up from pollstar/)
 const JWT = fs.readFileSync(path.join(HERE, "jwt.txt"), "utf8").trim();
 const PAGES_DIR = path.join(HERE, "pages");
 const CSV_PATH = path.join(HERE, "concerts.csv");
@@ -88,7 +92,7 @@ async function fetchPage(page, pageSize) {
     try {
       const { status, body } = await httpGet(urlFor(page, pageSize));
       if (status === 401 || status === 403) {
-        throw Object.assign(new Error(`auth failed (HTTP ${status}) — refresh jwt.txt`), { fatal: true });
+        throw Object.assign(new Error(`auth failed (HTTP ${status}): refresh jwt.txt`), { fatal: true });
       }
       if (status !== 200) throw new Error(`HTTP ${status}: ${body.slice(0, 120)}`);
       return decrypt(body);

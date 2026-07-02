@@ -65,11 +65,12 @@ Do this whenever a pull fails with `auth failed (HTTP 401)` or `403`, or about m
 5. Right click it, choose **Copy > Copy as cURL**.
 6. In the copied text find the header `Authorization:` and copy its value only (a long
    token, including the word `Bearer` if present).
-7. Paste that value into `jwt.txt`, replacing the entire contents. No quotes, no extra
-   whitespace (a single trailing newline is fine, the code trims it).
+7. Paste that value into `jwt.txt` **at the repository root** (next to this `pollstar/`
+   folder), replacing the entire contents. No quotes, no extra whitespace (a single
+   trailing newline is fine, the code trims it).
 
 That token is the only secret needed. It is also the AES decryption key source, so nothing
-else has to be copied. To sanity check it, run `node fetch_pollstar.js`; a bad token fails
+else has to be copied. To sanity check it, run `node pollstar/fetch_pollstar.js`; a bad token fails
 fast on page 0 with an auth error.
 
 ---
@@ -79,11 +80,11 @@ fast on page 0 with an auth error.
 Once `jwt.txt` holds a valid token, run from the project root:
 
 ```bash
-./handover/refresh_data.sh
+./pollstar/scripts/refresh_data.sh
 ```
 
 It checks prerequisites, runs the extractor, and prints a summary (record count and date
-range). Under the hood it runs `node fetch_pollstar.js`, which:
+range). Under the hood it runs `node pollstar/fetch_pollstar.js`, which:
 
 - Fetches page 0 to learn the total row count, then the remaining pages (about 15 pages of
   50,000 rows, roughly 25 seconds per page, 3 at a time).
@@ -94,14 +95,14 @@ range). Under the hood it runs `node fetch_pollstar.js`, which:
 Other modes:
 
 ```bash
-./handover/refresh_data.sh --csv     # rebuild concerts.csv from cache only, no network
-./handover/refresh_data.sh --fresh   # delete the page cache first, then a full pull
+./pollstar/scripts/refresh_data.sh --csv     # rebuild concerts.csv from cache only, no network
+./pollstar/scripts/refresh_data.sh --fresh   # delete the page cache first, then a full pull
 ```
 
 To make the smaller shareable files (each with a header row):
 
 ```bash
-./handover/split_concerts_csv.sh     # writes concerts_part1_of_7.csv ... part7_of_7.csv
+./pollstar/scripts/split_concerts_csv.sh     # writes concerts_part1_of_7.csv ... part7_of_7.csv
 ```
 
 ---
@@ -139,7 +140,7 @@ plaintext  = AES-256-CBC(base64decode(ciphertext), key, iv = key.slice(0, 16)), 
 The decrypted payload is JSON: `{ events: [...], totalRows, totalPages }`.
 
 **If Pollstar changes the scheme:** the decryption logic lives in the site JavaScript.
-Saved copies of the relevant bundles are in `chunks/` (look at `523.js`). To find the
+Saved copies of the relevant bundles are in `reference/chunks/` (look at `523.js`). To find the
 current logic, load the site, open the module that fetches `boxoffice2`, and trace how the
 response is transformed before the grid renders. The offset-plus-substring-key trick is
 the part most likely to change.
@@ -148,16 +149,19 @@ the part most likely to change.
 
 ## 6. File inventory
 
+Paths are relative to the repository root. Code lives in `pollstar/`; the token and data
+live at the repository root.
+
 | Path | Type | Purpose |
 | --- | --- | --- |
-| `fetch_pollstar.js` | code | The extractor. The heart of the pipeline. |
-| `handover/README_HANDOVER.md` | docs | This guide. |
-| `handover/refresh_data.sh` | script | Wrapper around the extractor with checks and a summary. |
-| `handover/split_concerts_csv.sh` | script | Split `concerts.csv` into shareable parts. |
-| `chunks/` | reference | Saved Pollstar site JS. Only needed if the encryption changes. |
-| `jwt.txt` | secret | API token. Created locally, gitignored, never committed. |
-| `pages/` | cache | One JSON file per API page. Enables resume. Gitignored. |
-| `concerts.csv` | output | The full flat dataset, about 166 MB. Gitignored. |
+| `pollstar/fetch_pollstar.js` | code | The extractor. The heart of the pipeline. |
+| `pollstar/README.md` | docs | This guide. |
+| `pollstar/scripts/refresh_data.sh` | script | Wrapper around the extractor with checks and a summary. |
+| `pollstar/scripts/split_concerts_csv.sh` | script | Split `concerts.csv` into shareable parts. |
+| `pollstar/reference/chunks/` | reference | Saved Pollstar site JS. Only needed if the encryption changes. |
+| `jwt.txt` | secret | API token, at the repo root. Created locally, gitignored, never committed. |
+| `pages/` | cache | API page cache at the repo root. Enables resume. Gitignored. |
+| `concerts.csv` | output | The full flat dataset at the repo root, about 166 MB. Gitignored. |
 | `concerts_part{1..7}_of_7.csv` | output | Optional shareable splits (each has a header). Gitignored. |
 
 ---
@@ -206,7 +210,7 @@ equals 1.000 for every currency, so no FX conversion is needed.
 | --- | --- |
 | `auth failed (HTTP 401)` or `403` | Token expired or wrong. Redo Section 3. |
 | `jwt.txt` not found | Create it with a valid token (Section 3). |
-| Run stops partway | Network hiccup. Run `./handover/refresh_data.sh` again, it resumes from the `pages/` cache. |
+| Run stops partway | Network hiccup. Run `./pollstar/scripts/refresh_data.sh` again, it resumes from the `pages/` cache. |
 | Row count looks low | Check `pages/` for a truncated page, delete the suspect `page-N.json`, and re-run. |
 | Summary line is skipped | `python3` is not installed. The extractor still prints its own row count. Optional. |
 | Pollstar changed and decryption fails | See Section 5. Inspect the current site bundle and update `decrypt()` in `fetch_pollstar.js`. |
@@ -229,7 +233,7 @@ equals 1.000 for every currency, so no FX conversion is needed.
 
 - [ ] Confirm access to a Pollstar Data Cloud Ultimate account.
 - [ ] Create `jwt.txt` with a fresh token (Section 3).
-- [ ] Run `./handover/refresh_data.sh` and confirm the row count and date range look current.
+- [ ] Run `./pollstar/scripts/refresh_data.sh` and confirm the row count and date range look current.
 - [ ] Skim Section 5 so you can fix the extractor if Pollstar changes their site.
 
 Questions on anything undocumented: start from `fetch_pollstar.js`, which is well commented.

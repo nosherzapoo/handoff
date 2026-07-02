@@ -8,7 +8,7 @@ jwt.txt
 # Python virtual environment.
 .venv/
 
-# Large data files (regenerate with refresh_data.sh / split_concerts_csv.sh).
+# Data lives at the repo root (regenerate with pollstar/scripts/refresh_data.sh).
 concerts.csv
 concerts_part*_of_*.csv
 pages/

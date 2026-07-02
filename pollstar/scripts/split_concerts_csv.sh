@@ -8,20 +8,20 @@
 # Last updated: 2026-07-02
 #
 # Usage (run from the project root):
-#   ./handover/split_concerts_csv.sh          # writes concerts_part1_of_7.csv ... part7_of_7.csv
-#   ./handover/split_concerts_csv.sh N        # split into N parts instead of 7
+#   ./pollstar/scripts/split_concerts_csv.sh          # writes concerts_part1_of_7.csv ... part7_of_7.csv
+#   ./pollstar/scripts/split_concerts_csv.sh N        # split into N parts instead of 7
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"   # scripts live in handover/, data lives one level up
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"   # scripts live in pollstar/scripts/, data at project root
 cd "$PROJECT_ROOT"
 
 PARTS="${1:-7}"
 SRC="concerts.csv"
 
 if [ ! -f "$SRC" ]; then
-  echo "ERROR: $SRC not found. Run ./handover/refresh_data.sh first." >&2
+  echo "ERROR: $SRC not found. Run ./pollstar/scripts/refresh_data.sh first." >&2
   exit 1
 fi
 
