@@ -1,0 +1,76 @@
+name: NY Gaming Data Monitor (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      recipient_email:
+        description: 'Email address to send the report to (leave blank to use default notification emails)'
+        required: false
+        default: ''
+
+# Grant the workflow permission to push commits using GITHUB_TOKEN
+permissions:
+  contents: write
+
+jobs:
+  monitor-gaming-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install aiohttp aiofiles pandas openpyxl requests pdfplumber
+        
+    - name: Download current data
+      run: |
+        python download_reports.py
+        
+    - name: Extract data to CSV
+      run: |
+        python extract_to_csv_v2.py
+        
+    - name: Create weekly exhibit
+      run: |
+        python create_weekly_exhibit.py
+
+    - name: Compare data and send notifications
+      run: |
+        python compare_data.py
+      env:
+        EMAIL_USER: ${{ secrets.EMAIL_USER }}
+        EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+        SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+        SMTP_PORT: ${{ secrets.SMTP_PORT }}
+        NOTIFICATION_EMAIL: ${{ github.event.inputs.recipient_email || format('{0},{1},{2}', secrets.NOTIFICATION_EMAIL1, secrets.NOTIFICATION_EMAIL2, secrets.NOTIFICATION_EMAIL3) }}
+        FORCE_SEND: "true"
+        
+    - name: Archive data
+      run: |
+        # Create timestamped directory
+        TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+        mkdir -p data_archive/$TIMESTAMP
+        cp ny_gaming_data.csv data_archive/$TIMESTAMP/
+        cp -r NY_State_Reports_* data_archive/$TIMESTAMP/ 2>/dev/null || true
+        
+        # Keep only the 10 most recent timestamped archives (never touch 'latest/')
+        cd data_archive
+        if [ $(ls -d [0-9]*/ 2>/dev/null | wc -l) -gt 10 ]; then
+          ls -t -d [0-9]*/ | tail -n +11 | xargs rm -rf
+        fi
+        
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        git diff --staged --quiet || git commit -m "Update NY gaming data - $(date)"
+        git push

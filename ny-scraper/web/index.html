@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NY Sports Betting Data — Weekly Report</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f1923;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    }
+
+    .logo-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    .logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #1F3864;
+    }
+
+    .logo-text {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #1F3864;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1F3864;
+      line-height: 1.3;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #444;
+      margin-bottom: 8px;
+    }
+
+    input[type="email"] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #d0d5dd;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: Arial, sans-serif;
+      color: #111;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 20px;
+    }
+
+    input[type="email"]:focus {
+      border-color: #1F3864;
+    }
+
+    button {
+      width: 100%;
+      padding: 13px;
+      background: #1F3864;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: Arial, sans-serif;
+      letter-spacing: 0.5px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+    }
+
+    button:hover:not(:disabled) { background: #162c52; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .status {
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      line-height: 1.5;
+      display: none;
+    }
+
+    .status.success {
+      background: #f0f7f0;
+      border: 1px solid #b0d9b0;
+      color: #2d6a2d;
+      display: block;
+    }
+
+    .status.error {
+      background: #fff5f5;
+      border: 1px solid #f5b8b8;
+      color: #b22222;
+      display: block;
+    }
+
+    .status.loading {
+      background: #f0f4fb;
+      border: 1px solid #b8cae8;
+      color: #1F3864;
+      display: block;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #eee;
+      margin: 32px 0 20px;
+    }
+
+    .note {
+      font-size: 11px;
+      color: #999;
+      line-height: 1.6;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid #1F3864;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo-bar">
+      <div class="logo-dot"></div>
+      <span class="logo-text">NY State Gaming Data</span>
+    </div>
+
+    <h1>Request the Latest Weekly Report</h1>
+    <p class="subtitle">
+      Enter your email and we'll send you the most recent 5 weeks of NY sports betting data —
+      Handle, GGR, Hold, and year-over-year comparisons across DraftKings, FanDuel, and Statewide totals.
+    </p>
+
+    <form id="reportForm">
+      <label for="emailInput">Your email address</label>
+      <input
+        type="email"
+        id="emailInput"
+        placeholder="you@example.com"
+        autocomplete="email"
+        required
+      />
+      <button type="submit" id="submitBtn">Send me the report</button>
+    </form>
+
+    <div id="status" class="status"></div>
+
+    <hr class="divider" />
+    <p class="note">
+      Reports are generated on demand. Expect delivery within 2 minutes.
+      Data sourced from the New York State Gaming Commission.
+    </p>
+  </div>
+
+  <script>
+    // ── Paste your scoped GitHub PAT here (see setup_public_form.md) ─────────
+    // Fine-grained token, Only-this-repo, Actions: Read and Write. Nothing else.
+    // It can ONLY trigger this workflow — it cannot read code or secrets.
+    const GITHUB_TOKEN  = 'REPLACE_WITH_YOUR_GITHUB_PAT';
+    const GITHUB_OWNER  = 'nosherzapoo';
+    const GITHUB_REPO   = 'OSBdata';
+    const WORKFLOW_FILE = 'ny-gaming-manual.yml';
+    // ─────────────────────────────────────────────────────────────────────────
+
+    const form      = document.getElementById('reportForm');
+    const statusEl  = document.getElementById('status');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('emailInput').value.trim();
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending request…';
+      statusEl.className = 'status loading';
+      statusEl.innerHTML = '<span class="spinner"></span> Triggering report generation — expect an email in about 2 minutes…';
+
+      try {
+        // Call the GitHub API directly to trigger the workflow. A successful
+        // dispatch returns 204 No Content (there is no JSON body to parse).
+        const res = await fetch(
+          `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_FILE}/dispatches`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${GITHUB_TOKEN}`,
+              'Accept':        'application/vnd.github.v3+json',
+              'Content-Type':  'application/json',
+            },
+            body: JSON.stringify({ ref: 'main', inputs: { recipient_email: email } }),
+          }
+        );
+
+        if (res.status === 204) {
+          statusEl.className = 'status success';
+          statusEl.textContent = `✓ Report requested. Check ${email} in about 2 minutes.`;
+          form.reset();
+        } else {
+          let detail = `${res.status} ${res.statusText}`;
+          try { const body = await res.json(); if (body.message) detail = body.message; } catch (_) {}
+          throw new Error(detail);
+        }
+      } catch (err) {
+        statusEl.className = 'status error';
+        statusEl.textContent = `Something went wrong: ${err.message}. Please try again.`;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send me the report';
+      }
+    });
+  </script>
+</body>
+</html>

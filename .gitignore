@@ -33,6 +33,14 @@ handover/requirements.txt
 Pollstar Data Cloud _ Boxoffice.html
 Pollstar Data Cloud _ Boxoffice_files/
 
+# NY scraper: generated data (regenerate by running ny-scraper/ pipeline).
+ny-scraper/NY_State_Reports_*/
+ny-scraper/data_archive/
+ny-scraper/ny_gaming_data.csv
+ny-scraper/ny_gaming_weekly_exhibit.xlsx
+ny-scraper/ny_gaming_analysis.xlsx
+ny-scraper/data_changes.json
+
 # OS and Python cruft.
 .DS_Store
 __pycache__/
