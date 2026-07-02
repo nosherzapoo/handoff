@@ -1,0 +1,27 @@
+# Pollstar pipeline: things that must NOT be committed.
+# Author: Nosher Ali Khan
+# Last updated: 2026-07-02
+
+# Secret: the API token. Never commit.
+jwt.txt
+
+# Python virtual environment.
+.venv/
+
+# Large data files (regenerate with refresh_data.sh / split_concerts_csv.sh).
+concerts.csv
+concerts_part*_of_*.csv
+pages/
+
+# Generated outputs (regenerate with run_analyses.sh).
+*.xlsx
+*.png
+
+# Saved site copies (not needed for the pipeline).
+Pollstar Data Cloud _ Boxoffice.html
+Pollstar Data Cloud _ Boxoffice_files/
+
+# OS and Python cruft.
+.DS_Store
+__pycache__/
+*.pyc
