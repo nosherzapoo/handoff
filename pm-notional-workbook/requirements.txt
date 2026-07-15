@@ -1,0 +1,7 @@
+# Workbook builder (always required)
+openpyxl>=3.1
+
+# Live Dune scrape only (not needed for --from-csv rebuilds).
+# After installing, run once:  playwright install chrome
+playwright>=1.40
+playwright-stealth>=1.0.6

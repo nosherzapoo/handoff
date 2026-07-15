@@ -49,3 +49,7 @@ __pycache__/
 # OSB operator workbook: the generated workbook IS the deliverable for this
 # project, so keep it tracked despite the global *.xlsx ignore above.
 !osb-operator-workbook/US_Operator_TimeSeries_Online.xlsx
+
+# PM notional workbook: the generated workbook is the deliverable, so keep it
+# tracked (and the CSV snapshot so --from-csv works without a scrape).
+!pm-notional-workbook/Weekly PM Notional Value.xlsx
