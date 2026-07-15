@@ -45,3 +45,7 @@ ny-scraper/data_changes.json
 .DS_Store
 __pycache__/
 *.pyc
+
+# OSB operator workbook: the generated workbook IS the deliverable for this
+# project, so keep it tracked despite the global *.xlsx ignore above.
+!osb-operator-workbook/US_Operator_TimeSeries_Online.xlsx
